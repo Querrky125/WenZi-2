@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📏 单位换算工具 - 朵朵工具箱</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+
+    <!-- Vanta.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            overflow-x: hidden;
+        }
+
+        #vanta-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .neon-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff, #00ffff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 3s ease infinite;
+            text-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+
+        @keyframes gradient {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .tool-container {
+            background: rgba(20, 20, 40, 0.85);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(255, 0, 255, 0.3);
+        }
+
+        .input-field, .select-field {
+            background: rgba(10, 10, 30, 0.6);
+            border: 2px solid rgba(255, 0, 255, 0.3);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus, .select-field:focus {
+            outline: none;
+            border-color: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .select-field option {
+            background: rgba(20, 20, 40, 1);
+            color: white;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(20, 20, 40, 0.8);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            background: rgba(102, 126, 234, 0.8);
+            transform: translateX(-5px);
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+            border: 2px solid rgba(0, 255, 255, 0.4);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .result-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #00ffff;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+        }
+
+        .label {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: rgba(0, 255, 255, 0.6);
+        }
+
+        .convert-icon {
+            font-size: 2rem;
+            color: #00ffff;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .neon-title {
+                font-size: 1.8rem;
+            }
+            .tool-container {
+                padding: 2rem 1.5rem;
+            }
+            .back-btn {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            .result-value {
+                font-size: 1.8rem;
+            }
+            .tab-btn {
+                font-size: 0.85rem;
+                padding: 0.6rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <!-- Vanta.js 背景 -->
+    <div id="vanta-bg"></div>
+
+    <!-- 返回按钮 -->
+    <a href="../../index.html" class="back-btn">← 返回首页</a>
+
+    <!-- 主容器 -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center py-20 px-4">
+        <div class="tool-container max-w-3xl w-full">
+            <h1 class="neon-title text-center mb-8">📏 单位换算工具</h1>
+
+            <!-- 类型选择标签 -->
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="changeCategory('length')">长度</button>
+                <button class="tab-btn" onclick="changeCategory('weight')">重量</button>
+                <button class="tab-btn" onclick="changeCategory('temperature')">温度</button>
+                <button class="tab-btn" onclick="changeCategory('area')">面积</button>
+                <button class="tab-btn" onclick="changeCategory('volume')">体积</button>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="mb-6">
+                <label class="label">输入值</label>
+                <input
+                    type="number"
+                    id="inputValue"
+                    class="input-field"
+                    placeholder="输入要转换的数值"
+                    oninput="convert()"
+                />
+            </div>
+
+            <div class="mb-6">
+                <label class="label">从</label>
+                <select id="fromUnit" class="select-field" onchange="convert()">
+                </select>
+            </div>
+
+            <div class="convert-icon">⬇️</div>
+
+            <div class="mb-6">
+                <label class="label">到</label>
+                <select id="toUnit" class="select-field" onchange="convert()">
+                </select>
+            </div>
+
+            <!-- 结果显示 -->
+            <div id="result" class="result-box" style="display: none;">
+                <div class="result-value" id="resultValue">0</div>
+                <div class="text-white mt-2 opacity-70" id="resultUnit"></div>
+            </div>
+
+            <div class="mt-8 p-4 bg-white bg-opacity-10 rounded-lg">
+                <h3 class="text-white font-semibold mb-2">💡 使用提示：</h3>
+                <ul class="text-white text-sm space-y-1 opacity-80">
+                    <li>• 支持长度、重量、温度、面积、体积的换算</li>
+                    <li>• 输入数值后自动进行换算</li>
+                    <li>• 支持常用单位之间的相互转换</li>
+                    <li>• 结果保留6位小数以保证精度</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 单位数据库
+        const units = {
+            length: {
+                name: '长度',
+                units: {
+                    '米 (m)': 1,
+                    '千米 (km)': 1000,
+                    '厘米 (cm)': 0.01,
+                    '毫米 (mm)': 0.001,
+                    '英里 (mile)': 1609.344,
+                    '码 (yard)': 0.9144,
+                    '英尺 (ft)': 0.3048,
+                    '英寸 (in)': 0.0254
+                }
+            },
+            weight: {
+                name: '重量',
+                units: {
+                    '千克 (kg)': 1,
+                    '克 (g)': 0.001,
+                    '毫克 (mg)': 0.000001,
+                    '吨 (t)': 1000,
+                    '磅 (lb)': 0.453592,
+                    '盎司 (oz)': 0.0283495,
+                    '斤': 0.5
+                }
+            },
+            temperature: {
+                name: '温度',
+                units: {
+                    '摄氏度 (°C)': 'celsius',
+                    '华氏度 (°F)': 'fahrenheit',
+                    '开尔文 (K)': 'kelvin'
+                }
+            },
+            area: {
+                name: '面积',
+                units: {
+                    '平方米 (m²)': 1,
+                    '平方千米 (km²)': 1000000,
+                    '平方厘米 (cm²)': 0.0001,
+                    '公顷 (ha)': 10000,
+                    '亩': 666.667,
+                    '平方英里 (mi²)': 2589988.11,
+                    '平方英尺 (ft²)': 0.092903
+                }
+            },
+            volume: {
+                name: '体积',
+                units: {
+                    '立方米 (m³)': 1,
+                    '升 (L)': 0.001,
+                    '毫升 (mL)': 0.000001,
+                    '立方厘米 (cm³)': 0.000001,
+                    '加仑 (gallon)': 0.00378541,
+                    '立方英尺 (ft³)': 0.0283168
+                }
+            }
+        };
+
+        let currentCategory = 'length';
+
+        // 初始化 Vanta.js 飞鸟背景
+        VANTA.BIRDS({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            backgroundColor: 0x0a0a1a,
+            color1: 0xff00ff,
+            color2: 0x00ffff,
+            colorMode: "lerp",
+            birdSize: 1.5,
+            wingSpan: 30.00,
+            speedLimit: 5.00,
+            separation: 50.00,
+            alignment: 50.00,
+            cohesion: 50.00,
+            quantity: 3.00
+        });
+
+        // 初始化单位选择器
+        function initializeUnits(category) {
+            const fromUnit = document.getElementById('fromUnit');
+            const toUnit = document.getElementById('toUnit');
+            const unitData = units[category].units;
+
+            fromUnit.innerHTML = '';
+            toUnit.innerHTML = '';
+
+            Object.keys(unitData).forEach(unit => {
+                fromUnit.innerHTML += `<option value="${unit}">${unit}</option>`;
+                toUnit.innerHTML += `<option value="${unit}">${unit}</option>`;
+            });
+
+            // 设置默认值
+            if (Object.keys(unitData).length > 1) {
+                toUnit.selectedIndex = 1;
+            }
+        }
+
+        // 切换类别
+        function changeCategory(category) {
+            currentCategory = category;
+
+            // 更新标签样式
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 重新初始化单位
+            initializeUnits(category);
+
+            // 清空结果
+            document.getElementById('inputValue').value = '';
+            document.getElementById('result').style.display = 'none';
+        }
+
+        // 转换函数
+        function convert() {
+            const inputValue = parseFloat(document.getElementById('inputValue').value);
+            const fromUnit = document.getElementById('fromUnit').value;
+            const toUnit = document.getElementById('toUnit').value;
+
+            if (isNaN(inputValue)) {
+                document.getElementById('result').style.display = 'none';
+                return;
+            }
+
+            let result;
+
+            if (currentCategory === 'temperature') {
+                result = convertTemperature(inputValue, fromUnit, toUnit);
+            } else {
+                const unitData = units[currentCategory].units;
+                const fromValue = unitData[fromUnit];
+                const toValue = unitData[toUnit];
+                result = (inputValue * fromValue) / toValue;
+            }
+
+            displayResult(result, toUnit);
+        }
+
+        // 温度转换
+        function convertTemperature(value, from, to) {
+            const fromType = units.temperature.units[from];
+            const toType = units.temperature.units[to];
+
+            // 先转换为摄氏度
+            let celsius;
+            if (fromType === 'celsius') {
+                celsius = value;
+            } else if (fromType === 'fahrenheit') {
+                celsius = (value - 32) * 5 / 9;
+            } else if (fromType === 'kelvin') {
+                celsius = value - 273.15;
+            }
+
+            // 再转换为目标单位
+            if (toType === 'celsius') {
+                return celsius;
+            } else if (toType === 'fahrenheit') {
+                return celsius * 9 / 5 + 32;
+            } else if (toType === 'kelvin') {
+                return celsius + 273.15;
+            }
+        }
+
+        // 显示结果
+        function displayResult(value, unit) {
+            const resultDiv = document.getElementById('result');
+            const resultValue = document.getElementById('resultValue');
+            const resultUnit = document.getElementById('resultUnit');
+
+            resultValue.textContent = value.toFixed(6).replace(/\.?0+$/, '');
+            resultUnit.textContent = unit;
+            resultDiv.style.display = 'block';
+        }
+
+        // 页面加载时初始化
+        initializeUnits('length');
+    </script>
+</body>
+</html>

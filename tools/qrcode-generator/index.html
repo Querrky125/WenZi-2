@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 文本转二维码 - 朵朵工具箱</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+
+    <!-- Vanta.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js"></script>
+
+    <!-- QRCode.js -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            overflow-x: hidden;
+        }
+
+        #vanta-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .neon-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff, #00ffff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 3s ease infinite;
+            text-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+
+        @keyframes gradient {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .tool-container {
+            background: rgba(20, 20, 40, 0.85);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(255, 0, 255, 0.3);
+        }
+
+        .input-field {
+            background: rgba(10, 10, 30, 0.6);
+            border: 2px solid rgba(255, 0, 255, 0.3);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(0, 255, 255, 0.6);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(20, 20, 40, 0.8);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            background: rgba(102, 126, 234, 0.8);
+            transform: translateX(-5px);
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 256px;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+        }
+
+        #qrcode canvas, #qrcode img {
+            border-radius: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .neon-title {
+                font-size: 1.8rem;
+            }
+            .tool-container {
+                padding: 2rem 1.5rem;
+            }
+            .back-btn {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <!-- Vanta.js 背景 -->
+    <div id="vanta-bg"></div>
+
+    <!-- 返回按钮 -->
+    <a href="../../index.html" class="back-btn">← 返回首页</a>
+
+    <!-- 主容器 -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center py-20 px-4">
+        <div class="tool-container max-w-2xl w-full">
+            <h1 class="neon-title text-center mb-8">📱 文本转二维码</h1>
+
+            <div class="mb-6">
+                <label class="text-white text-sm font-semibold mb-2 block">输入文本内容</label>
+                <textarea
+                    id="textInput"
+                    class="input-field"
+                    rows="4"
+                    placeholder="输入任意文本，如：网址、文字、联系方式等..."
+                ></textarea>
+            </div>
+
+            <div class="flex justify-center mb-6">
+                <button onclick="generateQRCode()" class="btn-primary">
+                    🎨 生成二维码
+                </button>
+            </div>
+
+            <div id="qrcode"></div>
+
+            <div class="text-center mt-6" id="downloadSection" style="display: none;">
+                <button onclick="downloadQRCode()" class="btn-secondary">
+                    📥 下载二维码
+                </button>
+                <button onclick="clearQRCode()" class="btn-secondary">
+                    🗑️ 清除
+                </button>
+            </div>
+
+            <div class="mt-8 p-4 bg-white bg-opacity-10 rounded-lg">
+                <h3 class="text-white font-semibold mb-2">💡 使用提示：</h3>
+                <ul class="text-white text-sm space-y-1 opacity-80">
+                    <li>• 支持网址、文本、联系方式等各类内容</li>
+                    <li>• 生成的二维码可以直接下载保存</li>
+                    <li>• 建议文本长度不超过500字符以保证清晰度</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let qrcode = null;
+
+        // 初始化 Vanta.js 飞鸟背景
+        VANTA.BIRDS({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            backgroundColor: 0x0a0a1a,
+            color1: 0xff00ff,
+            color2: 0x00ffff,
+            colorMode: "lerp",
+            birdSize: 1.5,
+            wingSpan: 30.00,
+            speedLimit: 5.00,
+            separation: 50.00,
+            alignment: 50.00,
+            cohesion: 50.00,
+            quantity: 3.00
+        });
+
+        function generateQRCode() {
+            const text = document.getElementById('textInput').value.trim();
+
+            if (!text) {
+                alert('请输入要转换的文本内容！');
+                return;
+            }
+
+            // 清除之前的二维码
+            document.getElementById('qrcode').innerHTML = '';
+
+            // 生成新的二维码
+            qrcode = new QRCode(document.getElementById('qrcode'), {
+                text: text,
+                width: 256,
+                height: 256,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // 显示下载按钮
+            document.getElementById('downloadSection').style.display = 'block';
+        }
+
+        function downloadQRCode() {
+            const canvas = document.querySelector('#qrcode canvas');
+            if (!canvas) {
+                alert('请先生成二维码！');
+                return;
+            }
+
+            const url = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'qrcode.png';
+            link.href = url;
+            link.click();
+        }
+
+        function clearQRCode() {
+            document.getElementById('qrcode').innerHTML = '';
+            document.getElementById('textInput').value = '';
+            document.getElementById('downloadSection').style.display = 'none';
+            qrcode = null;
+        }
+
+        // 支持Enter键生成（Ctrl+Enter）
+        document.getElementById('textInput').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                generateQRCode();
+            }
+        });
+    </script>
+</body>
+</html>

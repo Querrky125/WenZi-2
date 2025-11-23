@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📝 单词听写助手 - 朵朵工具箱</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+
+    <!-- Vanta.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            overflow-x: hidden;
+        }
+
+        #vanta-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .neon-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff, #00ffff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 3s ease infinite;
+            text-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+
+        @keyframes gradient {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .tool-container {
+            background: rgba(20, 20, 40, 0.85);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(255, 0, 255, 0.3);
+        }
+
+        .input-field, .select-field {
+            background: rgba(10, 10, 30, 0.6);
+            border: 2px solid rgba(255, 0, 255, 0.3);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus, .select-field:focus {
+            outline: none;
+            border-color: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .select-field option {
+            background: rgba(20, 20, 40, 1);
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(0, 255, 255, 0.6);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(20, 20, 40, 0.8);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            background: rgba(102, 126, 234, 0.8);
+            transform: translateX(-5px);
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .word-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .correct {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .incorrect {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #00ffff;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .neon-title {
+                font-size: 1.8rem;
+            }
+            .tool-container {
+                padding: 2rem 1.5rem;
+            }
+            .back-btn {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <!-- Vanta.js 背景 -->
+    <div id="vanta-bg"></div>
+
+    <!-- 返回按钮 -->
+    <a href="../../index.html" class="back-btn">← 返回首页</a>
+
+    <!-- 主容器 -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center py-20 px-4">
+        <div class="tool-container max-w-3xl w-full">
+            <h1 class="neon-title text-center mb-8">📝 单词听写助手</h1>
+
+            <!-- 设置界面 -->
+            <div id="setupScreen">
+                <div class="mb-6">
+                    <label class="text-white font-semibold mb-2 block">选择难度</label>
+                    <select id="difficulty" class="select-field">
+                        <option value="elementary">小学 - 基础单词</option>
+                        <option value="junior">初中 - 常用单词</option>
+                        <option value="senior">高中 - 进阶单词</option>
+                        <option value="cet4">大学四级 - CET-4</option>
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <label class="text-white font-semibold mb-2 block">听写数量</label>
+                    <select id="wordCount" class="select-field">
+                        <option value="10">10个单词</option>
+                        <option value="20" selected>20个单词</option>
+                        <option value="30">30个单词</option>
+                        <option value="50">50个单词</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-center">
+                    <button onclick="startDictation()" class="btn-primary">
+                        🎯 开始听写
+                    </button>
+                </div>
+            </div>
+
+            <!-- 听写界面 -->
+            <div id="dictationScreen" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar" style="width: 0%">
+                        <span id="progressText">0/0</span>
+                    </div>
+                </div>
+
+                <div class="word-card" id="wordCard">
+                    <button onclick="playWord()" class="btn-primary mb-4">
+                        🔊 播放单词
+                    </button>
+
+                    <input
+                        type="text"
+                        id="wordInput"
+                        class="input-field text-center text-xl"
+                        placeholder="输入你听到的单词"
+                        autocomplete="off"
+                        disabled
+                    />
+
+                    <div class="mt-4 flex justify-center gap-4">
+                        <button onclick="checkAnswer()" class="btn-primary" id="checkBtn" disabled>
+                            ✓ 检查答案
+                        </button>
+                        <button onclick="nextWord()" class="btn-secondary" id="nextBtn" style="display: none;">
+                            下一个 →
+                        </button>
+                    </div>
+
+                    <div id="feedback" class="mt-4" style="display: none;"></div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="correctCount">0</div>
+                        <div class="stat-label">✓ 正确</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="incorrectCount">0</div>
+                        <div class="stat-label">✗ 错误</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="accuracyRate">0%</div>
+                        <div class="stat-label">📊 正确率</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 结果界面 -->
+            <div id="resultScreen" style="display: none;">
+                <div class="text-center mb-6">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h2 class="text-white text-2xl font-bold mb-4">听写完成！</h2>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="finalCorrect">0</div>
+                            <div class="stat-label">正确</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="finalIncorrect">0</div>
+                            <div class="stat-label">错误</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="finalAccuracy">0%</div>
+                            <div class="stat-label">正确率</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="wrongWordsList" class="mb-6"></div>
+
+                <div class="flex justify-center gap-4">
+                    <button onclick="resetDictation()" class="btn-primary">
+                        🔄 重新开始
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-8 p-4 bg-white bg-opacity-10 rounded-lg">
+                <h3 class="text-white font-semibold mb-2">💡 使用提示：</h3>
+                <ul class="text-white text-sm space-y-1 opacity-80">
+                    <li>• 选择合适的难度和单词数量</li>
+                    <li>• 点击"播放单词"按钮听取发音</li>
+                    <li>• 输入单词后点击"检查答案"</li>
+                    <li>• 支持重复播放，可以多听几次</li>
+                    <li>• 听写结束后会显示错题列表供复习</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 单词库
+        const wordLists = {
+            elementary: [
+                { word: 'apple', meaning: '苹果' },
+                { word: 'book', meaning: '书' },
+                { word: 'cat', meaning: '猫' },
+                { word: 'dog', meaning: '狗' },
+                { word: 'egg', meaning: '鸡蛋' },
+                { word: 'fish', meaning: '鱼' },
+                { word: 'good', meaning: '好的' },
+                { word: 'happy', meaning: '快乐的' },
+                { word: 'ice', meaning: '冰' },
+                { word: 'jump', meaning: '跳' },
+                { word: 'king', meaning: '国王' },
+                { word: 'love', meaning: '爱' },
+                { word: 'milk', meaning: '牛奶' },
+                { word: 'nice', meaning: '美好的' },
+                { word: 'open', meaning: '打开' },
+                { word: 'pen', meaning: '钢笔' },
+                { word: 'quiet', meaning: '安静的' },
+                { word: 'red', meaning: '红色' },
+                { word: 'sun', meaning: '太阳' },
+                { word: 'tree', meaning: '树' }
+            ],
+            junior: [
+                { word: 'achieve', meaning: '达到，实现' },
+                { word: 'benefit', meaning: '益处，好处' },
+                { word: 'communicate', meaning: '交流' },
+                { word: 'develop', meaning: '发展' },
+                { word: 'environment', meaning: '环境' },
+                { word: 'festival', meaning: '节日' },
+                { word: 'government', meaning: '政府' },
+                { word: 'healthy', meaning: '健康的' },
+                { word: 'important', meaning: '重要的' },
+                { word: 'journey', meaning: '旅程' },
+                { word: 'knowledge', meaning: '知识' },
+                { word: 'library', meaning: '图书馆' },
+                { word: 'mountain', meaning: '山' },
+                { word: 'natural', meaning: '自然的' },
+                { word: 'opportunity', meaning: '机会' },
+                { word: 'perfect', meaning: '完美的' },
+                { word: 'question', meaning: '问题' },
+                { word: 'remember', meaning: '记住' },
+                { word: 'success', meaning: '成功' },
+                { word: 'traditional', meaning: '传统的' }
+            ],
+            senior: [
+                { word: 'accomplish', meaning: '完成' },
+                { word: 'beneficial', meaning: '有益的' },
+                { word: 'circumstance', meaning: '情况，环境' },
+                { word: 'distinguish', meaning: '区分' },
+                { word: 'extraordinary', meaning: '非凡的' },
+                { word: 'fundamental', meaning: '基本的' },
+                { word: 'guarantee', meaning: '保证' },
+                { word: 'hypothesis', meaning: '假设' },
+                { word: 'inevitable', meaning: '不可避免的' },
+                { word: 'justify', meaning: '证明...正当' },
+                { word: 'knowledge', meaning: '知识' },
+                { word: 'legitimate', meaning: '合法的' },
+                { word: 'magnificent', meaning: '壮丽的' },
+                { word: 'negotiate', meaning: '协商' },
+                { word: 'obstacle', meaning: '障碍' },
+                { word: 'perspective', meaning: '观点' },
+                { word: 'qualification', meaning: '资格' },
+                { word: 'reputation', meaning: '名声' },
+                { word: 'sufficient', meaning: '充足的' },
+                { word: 'tremendous', meaning: '巨大的' }
+            ],
+            cet4: [
+                { word: 'abandon', meaning: '放弃' },
+                { word: 'abstract', meaning: '抽象的' },
+                { word: 'academic', meaning: '学术的' },
+                { word: 'accommodate', meaning: '容纳' },
+                { word: 'accumulate', meaning: '积累' },
+                { word: 'accurate', meaning: '准确的' },
+                { word: 'acknowledge', meaning: '承认' },
+                { word: 'adequate', meaning: '足够的' },
+                { word: 'advocate', meaning: '提倡' },
+                { word: 'alternative', meaning: '可选择的' },
+                { word: 'ambiguous', meaning: '模糊的' },
+                { word: 'anticipate', meaning: '预期' },
+                { word: 'arbitrary', meaning: '任意的' },
+                { word: 'attribute', meaning: '归因于' },
+                { word: 'authorize', meaning: '授权' },
+                { word: 'capacity', meaning: '能力' },
+                { word: 'circumstance', meaning: '情况' },
+                { word: 'comprehend', meaning: '理解' },
+                { word: 'consecutive', meaning: '连续的' },
+                { word: 'demonstrate', meaning: '证明，演示' }
+            ]
+        };
+
+        let currentWordList = [];
+        let currentIndex = 0;
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
+        let wrongWords = [];
+        let synth = window.speechSynthesis;
+
+        // 初始化 Vanta.js 飞鸟背景
+        VANTA.BIRDS({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            backgroundColor: 0x0a0a1a,
+            color1: 0xff00ff,
+            color2: 0x00ffff,
+            colorMode: "lerp",
+            birdSize: 1.5,
+            wingSpan: 30.00,
+            speedLimit: 5.00,
+            separation: 50.00,
+            alignment: 50.00,
+            cohesion: 50.00,
+            quantity: 3.00
+        });
+
+        // 开始听写
+        function startDictation() {
+            const difficulty = document.getElementById('difficulty').value;
+            const count = parseInt(document.getElementById('wordCount').value);
+
+            // 随机选择单词
+            const allWords = wordLists[difficulty];
+            currentWordList = shuffleArray([...allWords]).slice(0, count);
+
+            // 重置状态
+            currentIndex = 0;
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            wrongWords = [];
+
+            // 切换界面
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('dictationScreen').style.display = 'block';
+
+            // 开始第一个单词
+            loadWord();
+        }
+
+        // 加载单词
+        function loadWord() {
+            if (currentIndex >= currentWordList.length) {
+                showResults();
+                return;
+            }
+
+            const wordInput = document.getElementById('wordInput');
+            wordInput.value = '';
+            wordInput.disabled = false;
+
+            document.getElementById('checkBtn').disabled = false;
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('wordCard').className = 'word-card';
+
+            updateProgress();
+            playWord();
+        }
+
+        // 播放单词
+        function playWord() {
+            const currentWord = currentWordList[currentIndex];
+            const utterance = new SpeechSynthesisUtterance(currentWord.word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8; // 稍慢速度
+            synth.speak(utterance);
+        }
+
+        // 检查答案
+        function checkAnswer() {
+            const userInput = document.getElementById('wordInput').value.trim().toLowerCase();
+            const correctWord = currentWordList[currentIndex].word.toLowerCase();
+            const feedback = document.getElementById('feedback');
+
+            if (userInput === '') {
+                alert('请输入单词！');
+                return;
+            }
+
+            const isCorrect = userInput === correctWord;
+
+            if (isCorrect) {
+                correctAnswers++;
+                document.getElementById('wordCard').className = 'word-card correct';
+                feedback.innerHTML = `<div class="text-green-400 text-lg font-bold">✓ 正确！</div>`;
+            } else {
+                incorrectAnswers++;
+                wrongWords.push({
+                    word: currentWordList[currentIndex].word,
+                    meaning: currentWordList[currentIndex].meaning,
+                    userAnswer: userInput
+                });
+                document.getElementById('wordCard').className = 'word-card incorrect';
+                feedback.innerHTML = `
+                    <div class="text-red-400 text-lg font-bold mb-2">✗ 错误</div>
+                    <div class="text-white">正确答案：<span class="font-bold text-yellow-400">${currentWordList[currentIndex].word}</span></div>
+                    <div class="text-white opacity-70">含义：${currentWordList[currentIndex].meaning}</div>
+                `;
+            }
+
+            feedback.style.display = 'block';
+            document.getElementById('wordInput').disabled = true;
+            document.getElementById('checkBtn').disabled = true;
+            document.getElementById('nextBtn').style.display = 'inline-block';
+
+            updateStats();
+        }
+
+        // 下一个单词
+        function nextWord() {
+            currentIndex++;
+            loadWord();
+        }
+
+        // 更新进度
+        function updateProgress() {
+            const total = currentWordList.length;
+            const current = currentIndex + 1;
+            const percentage = (currentIndex / total) * 100;
+
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = `${currentIndex}/${total}`;
+        }
+
+        // 更新统计
+        function updateStats() {
+            document.getElementById('correctCount').textContent = correctAnswers;
+            document.getElementById('incorrectCount').textContent = incorrectAnswers;
+
+            const total = correctAnswers + incorrectAnswers;
+            const accuracy = total > 0 ? Math.round((correctAnswers / total) * 100) : 0;
+            document.getElementById('accuracyRate').textContent = accuracy + '%';
+        }
+
+        // 显示结果
+        function showResults() {
+            document.getElementById('dictationScreen').style.display = 'none';
+            document.getElementById('resultScreen').style.display = 'block';
+
+            const total = correctAnswers + incorrectAnswers;
+            const accuracy = total > 0 ? Math.round((correctAnswers / total) * 100) : 0;
+
+            document.getElementById('finalCorrect').textContent = correctAnswers;
+            document.getElementById('finalIncorrect').textContent = incorrectAnswers;
+            document.getElementById('finalAccuracy').textContent = accuracy + '%';
+
+            // 显示错题列表
+            if (wrongWords.length > 0) {
+                const wrongWordsList = document.getElementById('wrongWordsList');
+                wrongWordsList.innerHTML = `
+                    <h3 class="text-white font-bold text-lg mb-3">❌ 错题列表（需要复习）</h3>
+                    ${wrongWords.map(item => `
+                        <div class="bg-white bg-opacity-5 p-3 rounded-lg mb-2 border-l-4 border-red-500">
+                            <div class="text-white font-bold">${item.word} - ${item.meaning}</div>
+                            <div class="text-red-400 text-sm">你的答案：${item.userAnswer}</div>
+                        </div>
+                    `).join('')}
+                `;
+            }
+        }
+
+        // 重新开始
+        function resetDictation() {
+            document.getElementById('resultScreen').style.display = 'none';
+            document.getElementById('setupScreen').style.display = 'block';
+        }
+
+        // 工具函数：打乱数组
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 支持Enter键提交
+        document.addEventListener('DOMContentLoaded', function() {
+            const wordInput = document.getElementById('wordInput');
+            if (wordInput) {
+                wordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !this.disabled) {
+                        checkAnswer();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

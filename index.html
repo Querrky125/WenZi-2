@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Games Hub - 游戏中心</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+
+    <!-- Vanta.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            overflow-x: hidden;
+        }
+
+        #vanta-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* 霓虹渐变标题 */
+        .neon-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff, #00ffff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 3s ease infinite, glitch 5s infinite;
+            text-shadow: 0 0 20px rgba(255, 0, 255, 0.5),
+                         0 0 40px rgba(0, 255, 255, 0.5);
+            position: relative;
+        }
+
+        /* 渐变动画 */
+        @keyframes gradient {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        /* 故障特效 */
+        @keyframes glitch {
+            0%, 90%, 100% {
+                transform: translate(0);
+            }
+            92% {
+                transform: translate(-2px, 2px);
+            }
+            94% {
+                transform: translate(2px, -2px);
+            }
+            96% {
+                transform: translate(-2px, -2px);
+            }
+            98% {
+                transform: translate(2px, 2px);
+            }
+        }
+
+        /* 游戏卡片 */
+        .game-card {
+            background: rgba(20, 20, 40, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 0, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+        }
+
+        .game-card:hover::before {
+            top: 100%;
+            left: 100%;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(255, 0, 255, 0.4),
+                        0 0 40px rgba(0, 255, 255, 0.3);
+            border-color: rgba(255, 0, 255, 0.5);
+        }
+
+        .game-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+        }
+
+        .game-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-desc {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.875rem;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #fff;
+            margin-top: 0.5rem;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .neon-title {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .neon-title {
+                font-size: 2rem;
+            }
+            .game-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <!-- Vanta.js 背景 -->
+    <div id="vanta-bg"></div>
+
+    <!-- 主容器 -->
+    <div class="relative z-10 min-h-screen">
+        <!-- 头部 -->
+        <header class="text-center py-20">
+            <h1 class="neon-title mb-4">🚀 朵朵工具箱</h1>
+            <p class="text-white text-xl font-light">4款实用工具 · 效率与便捷的完美结合</p>
+        </header>
+
+        <!-- 工具网格 -->
+        <main class="container mx-auto px-4 pb-20">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto" id="tools-container">
+                <!-- 工具卡片将由JavaScript动态生成 -->
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="text-center py-10 text-white text-sm">
+            <p>Made with ❤️ by 朵朵工具箱 | © 2024</p>
+        </footer>
+    </div>
+
+    <script>
+        // 工具数据
+        const tools = [
+            { name: '文本转二维码', icon: '📱', desc: '将文本快速转换为二维码', category: '实用工具', file: 'qrcode-generator' },
+            { name: '随机数生成器', icon: '🎲', desc: '生成指定范围的随机数', category: '实用工具', file: 'random-number' },
+            { name: '单位换算工具', icon: '📏', desc: '长度、重量、温度等单位换算', category: '实用工具', file: 'unit-converter' },
+            { name: '单词听写助手', icon: '📝', desc: '英语单词听写练习工具', category: '学习工具', file: 'word-dictation' }
+        ];
+
+        // 渲染工具卡片
+        const container = document.getElementById('tools-container');
+
+        tools.forEach(tool => {
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            card.innerHTML = `
+                <div class="game-icon">${tool.icon}</div>
+                <h3 class="game-title">${tool.name}</h3>
+                <p class="game-desc">${tool.desc}</p>
+                <span class="category-badge">${tool.category}</span>
+            `;
+            card.onclick = () => {
+                window.location.href = `tools/${tool.file}/index.html`;
+            };
+            container.appendChild(card);
+        });
+
+        // 初始化 Vanta.js 飞鸟背景
+        VANTA.BIRDS({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            backgroundColor: 0x0a0a1a,
+            color1: 0xff00ff,
+            color2: 0x00ffff,
+            colorMode: "lerp",
+            birdSize: 1.5,
+            wingSpan: 30.00,
+            speedLimit: 5.00,
+            separation: 50.00,
+            alignment: 50.00,
+            cohesion: 50.00,
+            quantity: 3.00
+        });
+    </script>
+</body>
+</html>

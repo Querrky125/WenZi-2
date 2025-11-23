@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎲 随机数生成器 - 朵朵工具箱</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+
+    <!-- Vanta.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            overflow-x: hidden;
+        }
+
+        #vanta-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .neon-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff, #00ffff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 3s ease infinite;
+            text-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+
+        @keyframes gradient {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .tool-container {
+            background: rgba(20, 20, 40, 0.85);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(255, 0, 255, 0.3);
+        }
+
+        .input-field {
+            background: rgba(10, 10, 30, 0.6);
+            border: 2px solid rgba(255, 0, 255, 0.3);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(20, 20, 40, 0.8);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            background: rgba(102, 126, 234, 0.8);
+            transform: translateX(-5px);
+        }
+
+        .result-display {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+            border: 2px solid rgba(0, 255, 255, 0.4);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            margin: 2rem 0;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .result-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            color: #00ffff;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .label {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+            color: white;
+            font-family: 'Orbitron', monospace;
+            border-left: 3px solid rgba(0, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .neon-title {
+                font-size: 1.8rem;
+            }
+            .tool-container {
+                padding: 2rem 1.5rem;
+            }
+            .back-btn {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            .result-number {
+                font-size: 3rem;
+            }
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <!-- Vanta.js 背景 -->
+    <div id="vanta-bg"></div>
+
+    <!-- 返回按钮 -->
+    <a href="../../index.html" class="back-btn">← 返回首页</a>
+
+    <!-- 主容器 -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center py-20 px-4">
+        <div class="tool-container max-w-3xl w-full">
+            <h1 class="neon-title text-center mb-8">🎲 随机数生成器</h1>
+
+            <div class="input-row">
+                <div>
+                    <label class="label">最小值</label>
+                    <input
+                        type="number"
+                        id="minValue"
+                        class="input-field"
+                        value="1"
+                        placeholder="输入最小值"
+                    />
+                </div>
+                <div>
+                    <label class="label">最大值</label>
+                    <input
+                        type="number"
+                        id="maxValue"
+                        class="input-field"
+                        value="100"
+                        placeholder="输入最大值"
+                    />
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="label">生成数量</label>
+                <input
+                    type="number"
+                    id="count"
+                    class="input-field"
+                    value="1"
+                    min="1"
+                    max="100"
+                    placeholder="输入生成数量（1-100）"
+                />
+            </div>
+
+            <div class="mb-6">
+                <label class="flex items-center cursor-pointer">
+                    <input type="checkbox" id="unique" class="mr-2 w-5 h-5">
+                    <span class="text-white font-semibold">生成不重复的随机数</span>
+                </label>
+            </div>
+
+            <div class="flex justify-center mb-6">
+                <button onclick="generateRandom()" class="btn-primary">
+                    🎯 生成随机数
+                </button>
+            </div>
+
+            <div id="result" class="result-display" style="display: none;">
+                <div id="resultNumbers"></div>
+            </div>
+
+            <div id="history" style="display: none;">
+                <h3 class="text-white font-bold text-lg mb-3 mt-6">📊 历史记录</h3>
+                <div id="historyList"></div>
+                <button onclick="clearHistory()" class="btn-primary mt-4" style="font-size: 0.9rem; padding: 0.75rem 1.5rem;">
+                    🗑️ 清除历史
+                </button>
+            </div>
+
+            <div class="mt-8 p-4 bg-white bg-opacity-10 rounded-lg">
+                <h3 class="text-white font-semibold mb-2">💡 使用提示：</h3>
+                <ul class="text-white text-sm space-y-1 opacity-80">
+                    <li>• 支持生成正数、负数和小数范围</li>
+                    <li>• 可选择是否生成不重复的数字</li>
+                    <li>• 最多一次生成100个随机数</li>
+                    <li>• 自动保存历史记录，方便回顾</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let history = [];
+
+        // 初始化 Vanta.js 飞鸟背景
+        VANTA.BIRDS({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            backgroundColor: 0x0a0a1a,
+            color1: 0xff00ff,
+            color2: 0x00ffff,
+            colorMode: "lerp",
+            birdSize: 1.5,
+            wingSpan: 30.00,
+            speedLimit: 5.00,
+            separation: 50.00,
+            alignment: 50.00,
+            cohesion: 50.00,
+            quantity: 3.00
+        });
+
+        function generateRandom() {
+            const min = parseFloat(document.getElementById('minValue').value);
+            const max = parseFloat(document.getElementById('maxValue').value);
+            const count = parseInt(document.getElementById('count').value);
+            const unique = document.getElementById('unique').checked;
+
+            if (isNaN(min) || isNaN(max)) {
+                alert('请输入有效的数值！');
+                return;
+            }
+
+            if (min >= max) {
+                alert('最小值必须小于最大值！');
+                return;
+            }
+
+            if (count < 1 || count > 100) {
+                alert('生成数量必须在1-100之间！');
+                return;
+            }
+
+            if (unique && count > (max - min + 1)) {
+                alert('不重复模式下，生成数量不能超过范围内的整数个数！');
+                return;
+            }
+
+            let numbers = [];
+
+            if (unique) {
+                // 生成不重复的随机数
+                const available = [];
+                for (let i = Math.ceil(min); i <= Math.floor(max); i++) {
+                    available.push(i);
+                }
+                for (let i = 0; i < count; i++) {
+                    const index = Math.floor(Math.random() * available.length);
+                    numbers.push(available[index]);
+                    available.splice(index, 1);
+                }
+            } else {
+                // 生成可重复的随机数
+                for (let i = 0; i < count; i++) {
+                    const random = Math.random() * (max - min) + min;
+                    // 如果是整数范围，返回整数
+                    if (Number.isInteger(min) && Number.isInteger(max)) {
+                        numbers.push(Math.floor(random));
+                    } else {
+                        numbers.push(Math.round(random * 100) / 100);
+                    }
+                }
+            }
+
+            displayResult(numbers);
+            addToHistory(numbers, min, max);
+        }
+
+        function displayResult(numbers) {
+            const resultDiv = document.getElementById('result');
+            const resultNumbers = document.getElementById('resultNumbers');
+
+            resultDiv.style.display = 'flex';
+
+            if (numbers.length === 1) {
+                resultNumbers.innerHTML = `<div class="result-number">${numbers[0]}</div>`;
+            } else {
+                const numbersHtml = numbers.map(num =>
+                    `<span class="result-number" style="font-size: 2rem; margin: 0.5rem;">${num}</span>`
+                ).join('');
+                resultNumbers.innerHTML = `<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">${numbersHtml}</div>`;
+            }
+        }
+
+        function addToHistory(numbers, min, max) {
+            const timestamp = new Date().toLocaleTimeString('zh-CN');
+            history.unshift({
+                numbers: numbers,
+                range: `${min} ~ ${max}`,
+                time: timestamp
+            });
+
+            // 只保留最近10条
+            if (history.length > 10) {
+                history = history.slice(0, 10);
+            }
+
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const historyDiv = document.getElementById('history');
+            const historyList = document.getElementById('historyList');
+
+            if (history.length === 0) {
+                historyDiv.style.display = 'none';
+                return;
+            }
+
+            historyDiv.style.display = 'block';
+
+            historyList.innerHTML = history.map((item, index) => `
+                <div class="history-item">
+                    <div style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-bottom: 0.25rem;">${item.time}</div>
+                    <div>范围: ${item.range} | 结果: ${item.numbers.join(', ')}</div>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            if (confirm('确定要清除所有历史记录吗？')) {
+                history = [];
+                updateHistoryDisplay();
+            }
+        }
+
+        // 支持Enter键生成
+        ['minValue', 'maxValue', 'count'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    generateRandom();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

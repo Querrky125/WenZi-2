@@ -1,0 +1,16 @@
+{
+  "name": "duoduo-toolbox",
+  "version": "1.0.0",
+  "description": "朵朵工具箱 - 现代化实用工具集合，包含二维码生成、随机数生成、单位换算、单词听写等工具",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx http-server -p 3000",
+    "build": "echo 'No build needed for static site'"
+  },
+  "keywords": ["tools", "qrcode", "converter", "dictation", "utilities", "html5", "javascript", "vercel"],
+  "author": "朵朵",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
